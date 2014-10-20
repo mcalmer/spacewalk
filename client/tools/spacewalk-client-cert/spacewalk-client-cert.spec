@@ -36,7 +36,12 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %config  /etc/sysconfig/rhn/clientCaps.d/client-cert
 %{_datadir}/rhn/actions/clientcert.*
-
+%if 0%{?suse_version}
+%dir /etc/sysconfig/rhn
+%dir /etc/sysconfig/rhn/clientCaps.d
+%dir %{_datadir}/rhn
+%dir %{_datadir}/rhn/actions
+%endif
 
 %changelog
 * Thu Mar 19 2015 Grant Gainey 2.3.2-1
