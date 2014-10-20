@@ -41,6 +41,9 @@ rm -rf $RPM_BUILD_ROOT
 %{_datadir}/spacewalk/reports
 %{_mandir}/man8/spacewalk-report.8*
 %doc COPYING
+%if 0%{?suse_version}
+%dir %{_datadir}/spacewalk
+%endif
 
 %changelog
 * Thu Aug 13 2015 Grant Gainey 2.4.4-1
