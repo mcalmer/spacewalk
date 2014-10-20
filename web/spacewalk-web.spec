@@ -1,3 +1,12 @@
+%if 0%{?suse_version}
+%define www_path /srv/www/htdocs
+%define apache_group www
+%define webserver apache2
+%else
+%define www_path %{_var}/www/html
+%define apache_group apache
+%define webserver webserver
+%endif
 %{!?fedora: %global sbinpath /sbin}%{?fedora: %global sbinpath %{_sbindir}}
 
 Name: spacewalk-web
@@ -20,7 +29,7 @@ but it does generate a number of sub-packages.
 %package -n spacewalk-html
 Summary: HTML document files for Spacewalk
 Group: Applications/Internet
-Requires: webserver
+Requires: %{webserver}
 Requires: spacewalk-branding
 Obsoletes: rhn-help < 5.3.0
 Provides: rhn-help = 5.3.0
@@ -40,7 +49,7 @@ Group: Applications/Internet
 Summary: Programs needed to be installed on the RHN Web base classes
 Provides: spacewalk(spacewalk-base) = %{version}-%{release}
 Requires: /usr/bin/sudo
-Requires: webserver
+Requires: %{webserver}
 Requires:  perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $version))
 Requires: perl(Params::Validate)
 Requires: perl(XML::LibXML)
@@ -106,12 +115,12 @@ make -f Makefile.spacewalk-web PERLARGS="INSTALLDIRS=vendor" %{?_smp_mflags}
 %install
 rm -rf $RPM_BUILD_ROOT
 make -C modules install DESTDIR=$RPM_BUILD_ROOT PERLARGS="INSTALLDIRS=vendor" %{?_smp_mflags}
-make -C html install PREFIX=$RPM_BUILD_ROOT
+make -C html install PREFIX=$RPM_BUILD_ROOT INSTALL_DEST=%{www_path}
 
 find $RPM_BUILD_ROOT -type f -name perllocal.pod -exec rm -f {} \;
 find $RPM_BUILD_ROOT -type f -name .packlist -exec rm -f {} \;
 
-mkdir -p $RPM_BUILD_ROOT/%{_var}/www/html/pub
+mkdir -p $RPM_BUILD_ROOT/%{www_path}/pub
 mkdir -p $RPM_BUILD_ROOT%{_prefix}/share/rhn/config-defaults
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/init.d
 mkdir -p $RPM_BUILD_ROOT/%{_sysconfdir}/httpd/conf
@@ -142,7 +151,11 @@ rm -rf $RPM_BUILD_ROOT
 %doc LICENSE
 
 %files -n spacewalk-base-minimal-config
-%attr(644,root,apache) %{_prefix}/share/rhn/config-defaults/rhn_web.conf
+%attr(644,root,%{apache_group}) %{_prefix}/share/rhn/config-defaults/rhn_web.conf
+%if 0%{?suse_version}
+%dir %{_prefix}/share/rhn
+%dir %attr(750,root,%{apache_group}) %{_prefix}/share/rhn/config-defaults
+%endif
 
 %files -n spacewalk-dobby
 %attr(755,root,root) %{_bindir}/db-control
@@ -151,9 +164,13 @@ rm -rf $RPM_BUILD_ROOT
 %attr(644,root,root) %{_prefix}/share/rhn/config-defaults/rhn_dobby.conf
 %attr(0755,root,root) %{_sysconfdir}/cron.daily/check-database-space-usage.sh
 %{perl_vendorlib}/Dobby/
+%if 0%{?suse_version}
+%dir %{_prefix}/share/rhn
+%dir %attr(750,root,%{apache_group}) %{_prefix}/share/rhn/config-defaults
+%endif
 
 %files -n spacewalk-html
-%{_var}/www/html/*
+%{www_path}/*
 %doc LICENSE
 
 %changelog
