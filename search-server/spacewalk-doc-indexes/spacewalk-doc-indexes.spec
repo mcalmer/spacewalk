@@ -41,7 +41,11 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %{_prefix}/share/rhn/search/indexes/docs
-
+%if 0%{?suse_version}
+%dir %{_prefix}/share/rhn
+%dir %{_prefix}/share/rhn/search
+%dir %{_prefix}/share/rhn/search/indexes
+%endif
 
 %changelog
 * Thu Mar 19 2015 Grant Gainey 2.3.3-1
