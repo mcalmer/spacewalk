@@ -1,3 +1,15 @@
+%if 0%{?suse_version}
+%global ldconfig_pkg glibc
+%global execstack_pkg prelink
+%global file_pkg file
+%global xargs_pkg findutils
+%else
+%global ldconfig_pkg ldconfig
+%global execstack_pkg /usr/bin/execstack
+%global file_pkg /usr/bin/file
+%global xargs_pkg /usr/bin/xargs
+%endif
+
 Name:           oracle-lib-compat
 Version:        11.2.0.12
 Release:        1%{?dist}
@@ -27,10 +39,16 @@ Requires:       oracle-instantclient11.2-sqlplus = %{icversion}
 %define soversion 11
 %endif
 
-Requires(post): ldconfig
-Requires(post): /usr/bin/execstack
-Requires(post): /usr/bin/file
-Requires(post): /usr/bin/xargs
+%ifarch x86_64 s390x
+%define clientdir client64
+%else
+%define clientdir client
+%endif
+
+Requires(post): %{ldconfig_pkg}
+Requires(post): %{execstack_pkg}
+Requires(post): %{file_pkg}
+Requires(post): %{xargs_pkg}
 
 %ifarch x86_64
 %define lib64 ()(64bit)
@@ -57,6 +75,10 @@ Compatibility package so that perl-DBD-Oracle will install.
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT
 
+%if 0%{?suse_version}
+export NO_BRP_STALE_LINK_ERROR=yes
+%endif
+
 mkdir -p $RPM_BUILD_ROOT%{_sysconfdir}/ld.so.conf.d
 echo %{_libdir}/oracle/%{icdir}/client/lib >>$RPM_BUILD_ROOT%{_sysconfdir}/ld.so.conf.d/oracle-instantclient-%{icdir}.conf
 
@@ -70,13 +92,10 @@ ln -s ../%{_lib}/oracle/%{icdir}/client/bin/sqlplus $RPM_BUILD_ROOT%{_bindir}/sq
 
 mkdir -p $RPM_BUILD_ROOT%{_libdir}/oracle/%{icdir}
 ln -s ../../../lib/oracle/%{icdir}/client64 $RPM_BUILD_ROOT%{_libdir}/oracle/%{icdir}/client
-
-mkdir -p $RPM_BUILD_ROOT/usr/lib/oracle/11.2/client64/lib/network/admin
-echo 'diag_adr_enabled = off' > $RPM_BUILD_ROOT/usr/lib/oracle/11.2/client64/lib/network/admin/sqlnet.ora
-%else
-mkdir -p $RPM_BUILD_ROOT/usr/lib/oracle/11.2/client/lib/network/admin
-echo 'diag_adr_enabled = off' > $RPM_BUILD_ROOT/usr/lib/oracle/11.2/client/lib/network/admin/sqlnet.ora
 %endif
+
+mkdir -p $RPM_BUILD_ROOT/usr/lib/oracle/11.2/%{clientdir}/lib/network/admin
+echo 'diag_adr_enabled = off' > $RPM_BUILD_ROOT/usr/lib/oracle/11.2/%{clientdir}/lib/network/admin/sqlnet.ora
 
 mkdir -p $RPM_BUILD_ROOT/%{_javadir}
 ln -s ../../%{_lib}/oracle/%{icdir}/client/lib/ojdbc6.jar $RPM_BUILD_ROOT/%{_javadir}/ojdbc14.jar
@@ -88,13 +107,19 @@ rm -rf $RPM_BUILD_ROOT
 %ifarch x86_64 s390x
 %{_bindir}/sqlplus
 %{_libdir}/oracle
-/usr/lib/oracle/11.2/client64/lib/network/admin/sqlnet.ora
-%else
-/usr/lib/oracle/11.2/client/lib/network/admin/sqlnet.ora
 %endif
+/usr/lib/oracle/11.2/%{clientdir}/lib/network/admin/sqlnet.ora
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/oracle-instantclient-%{icdir}.conf
 %config(noreplace) %{_sysconfdir}/ld.so.conf.d/oracle-xe.conf
 %{_javadir}/ojdbc14.jar
+%if 0%{?suse_version}
+%dir /usr/lib/oracle
+%dir /usr/lib/oracle/11.2
+%dir /usr/lib/oracle/11.2/%{clientdir}
+%dir /usr/lib/oracle/11.2/%{clientdir}/lib
+%dir /usr/lib/oracle/11.2/%{clientdir}/lib/network
+%dir /usr/lib/oracle/11.2/%{clientdir}/lib/network/admin
+%endif
 
 %post
 ldconfig
@@ -102,7 +127,7 @@ ldconfig
 # clear execstack on libs in oracle's provided instantclient rpm
 find %{_prefix}/lib/oracle/%{icdir} \
         | xargs file | awk -F: '/ELF.*(executable|shared object)/ {print $1}' \
-        | xargs execstack -c
+        | xargs execstack -c ||:
 
 %changelog
 * Thu Jan 29 2015 Tomas Lestach <tlestach@redhat.com> 11.2.0.12-1
