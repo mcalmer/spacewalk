@@ -52,6 +52,9 @@ Requires:       spacewalk-backend-libs
 Requires:       spacewalk-backend-tools >= 2.2.27
 Requires:       spacewalk-reports
 Requires:       yum-utils
+%if 0%{?suse_version}
+BuildRequires:  spacewalk-config
+%endif
 
 %description
 Generic utilities that may be run against a Spacewalk server.
@@ -93,7 +96,9 @@ spacewalk-pylint $RPM_BUILD_ROOT%{rhnroot}
 %{rhnroot}/utils/cloneByDate.py*
 %{rhnroot}/utils/depsolver.py*
 %{_mandir}/man8/*
-
+%if 0%{?suse_version}
+%dir %{rhnroot}
+%endif
 
 %changelog
 * Tue Aug 18 2015 Tomas Kasparek <tkasparek@redhat.com> 2.4.15-1
