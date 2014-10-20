@@ -269,10 +269,32 @@ SYSCONFIG_DIR=/etc/sysconfig/rhn
 RHNCONF_DIR=/etc/rhn
 HTTPDCONF_DIR=/etc/httpd/conf
 HTTPDCONFD_DIR=/etc/httpd/conf.d
+HTTPD_SSL_CONF=$HTTPDCONFD_DIR/ssl.conf
 HTMLPUB_DIR=/var/www/html/pub
 JABBERD_DIR=/etc/jabberd
 SQUID_DIR=/etc/squid
+SQUID_CACHE_DIR=/var/spool/squid
+APACHE_GROUP=apache
+HTTPD_SERVICE=httpd
 SYSTEMID_PATH=`PYTHONPATH='/usr/share/rhn' python -c "from up2date_client import config; cfg = config.initUp2dateConfig(); print cfg['systemIdPath'] "`
+
+# zypper == suse
+if [ -x /usr/bin/zypper ]; then
+    YUM="zypper install"
+    UPGRADE="zypper update"
+    # add --non-interactive for non-interactive installation
+    if [ "$INTERACTIVE" = "0" ]; then
+        YUM="zypper --non-interactive install"
+        UPGRADE="zypper --non-interactive update"
+    fi
+    HTTPDCONF_DIR=/etc/apache2
+    HTTPDCONFD_DIR=/etc/apache2/conf.d
+    HTTPD_SSL_CONF=$HTTPDCONF_DIR/vhosts.d/ssl.conf
+    HTMLPUB_DIR=/srv/www/htdocs/pub
+    SQUID_CACHE_DIR=/var/cache/squid
+    APACHE_GROUP=www
+    HTTPD_SERVICE=apache2
+fi
 
 if [ ! -r $SYSTEMID_PATH ]; then
     echo ERROR: Spacewalk Proxy does not appear to be registered
@@ -282,7 +304,7 @@ fi
 SYSTEM_ID=$(/usr/bin/xsltproc /usr/share/rhn/get_system_id.xslt $SYSTEMID_PATH | cut -d- -f2)
 
 DIR=/usr/share/doc/proxy/conf-template
-HOSTNAME=$(hostname)
+HOSTNAME=$(hostname -f)
 
 FORCE_OWN_CA=$(yes_no $FORCE_OWN_CA)
 
@@ -321,9 +343,16 @@ fi
 
 check_ca_conf
 
-if ! /sbin/runuser nobody -s /bin/sh --command="[ -r $CA_CHAIN ]" ; then
-    echo Error: File $CA_CHAIN is not readable by nobody user.
-    exit 1
+if [ -x /sbin/runuser ]; then
+    if ! /sbin/runuser nobody -s /bin/sh --command="[ -r $CA_CHAIN ]" ; then
+        echo Error: File $CA_CHAIN is not readable by nobody user.
+        exit 1
+    fi
+else
+    if ! /bin/su nobody -s /bin/sh --command="[ -r $CA_CHAIN ]" ; then
+        echo Error: File $CA_CHAIN is not readable by nobody user.
+        exit 1
+    fi
 fi
 
 default_or_input "HTTP Proxy" HTTP_PROXY ''
@@ -425,8 +454,8 @@ fi
 # df -P give free space in kB
 # * 60 / 100 is 60% of that space
 # / 1024 is to get value in MB
-SQUID_SIZE=$(df -P /var/spool/squid | awk '{a=$4} END {printf("%d", a * 60 / 100 / 1024)}')
-SQUID_REWRITE="s|cache_dir ufs /var/spool/squid 15000 16 256|cache_dir ufs /var/spool/squid $SQUID_SIZE 16 256|g;"
+SQUID_SIZE=$(df -P $SQUID_CACHE_DIR | awk '{a=$4} END {printf("%d", a * 60 / 100 / 1024)}')
+SQUID_REWRITE="s|cache_dir ufs $SQUID_CACHE_DIR 15000 16 256|cache_dir ufs $SQUID_CACHE_DIR $SQUID_SIZE 16 256|g;"
 SQUID_VER_MAJOR=$(squid -v | awk -F'[ .]' '/Version/ {print $4}')
 if [ $SQUID_VER_MAJOR -ge 3 ] ; then
     # squid 3.X has acl 'all' built-in
@@ -449,7 +478,7 @@ sed -e "s|\${session.ca_chain:/usr/share/rhn/RHNS-CA-CERT}|$CA_CHAIN|g" \
 
 # systemid need to be readable by apache/proxy
 for file in $SYSTEMID_PATH $UP2DATE_FILE; do
-    chown root:apache $file
+    chown root:$APACHE_GROUP $file
     chmod 0640 $file
 done
 
@@ -520,15 +549,18 @@ echo "Generating SSL key and public certificate:"
 config_error $? "SSL key generation failed!"
 
 echo "Installing SSL certificate for Apache and Jabberd:"
-rpm -Uv $(/usr/bin/rhn-ssl-tool --gen-server --rpm-only --dir="$SSL_BUILD_DIR" 2>/dev/null |grep noarch.rpm)
+rpm -Uv $(/usr/bin/rhn-ssl-tool --gen-server --rpm-only --dir="$SSL_BUILD_DIR" --set-hostname "$HOSTNAME" 2>/dev/null |grep noarch.rpm)
 
-if [ -e $HTTPDCONFD_DIR/ssl.conf ]; then
-    mv $HTTPDCONFD_DIR/ssl.conf $HTTPDCONFD_DIR/ssl.conf.bak
+if [ -e $HTTPD_SSL_CONF ]; then
+    mv $HTTPD_SSL_CONF $HTTPD_SSL_CONF.bak
+elif [ -e $HTTPDCONF_DIR/vhosts.d/vhost-ssl.template ]; then
+    cp $HTTPDCONF_DIR/vhosts.d/vhost-ssl.template $HTTPD_SSL_CONF.bak
 fi
-sed -e "s|^SSLCertificateFile /etc/pki/tls/certs/localhost.crt$|SSLCertificateFile $HTTPDCONF_DIR/ssl.crt/server.crt|g" \
-    -e "s|^SSLCertificateKeyFile /etc/pki/tls/private/localhost.key$|SSLCertificateKeyFile $HTTPDCONF_DIR/ssl.key/server.key|g" \
-    -e "s|</VirtualHost>|RewriteEngine on\nRewriteOptions inherit\nSSLProxyEngine on\n</VirtualHost>|" \
-    < $HTTPDCONFD_DIR/ssl.conf.bak  > $HTTPDCONFD_DIR/ssl.conf
+sed -e "s|^[\t ]*SSLCertificateFile.*$|SSLCertificateFile $HTTPDCONF_DIR/ssl.crt/server.crt|g" \
+    -e "s|^[\t ]*SSLCertificateKeyFile.*$|SSLCertificateKeyFile $HTTPDCONF_DIR/ssl.key/server.key|g" \
+    -e "s|^[\t ]*SSLCipherSuite.*$|SSLCipherSuite ALL:!aNULL:!eNULL:!SSLv2:!LOW:!EXP:!MD5:@STRENGTH|g" \
+    -e "s|</VirtualHost>|SSLProtocol all -SSLv2 -SSLv3\nRewriteEngine on\nRewriteOptions inherit\nSSLProxyEngine on\n</VirtualHost>|" \
+    < $HTTPD_SSL_CONF.bak  > $HTTPD_SSL_CONF
 
 
 CHANNEL_LABEL="rhn_proxy_config_$SYSTEM_ID"
@@ -549,7 +581,7 @@ if [ "$POPULATE_CONFIG_CHANNEL" = "1" ]; then
     fi
     rhncfg-manager update --server-name "$RHN_PARENT" \
         --channel="$CHANNEL_LABEL" \
-        $HTTPDCONFD_DIR/ssl.conf \
+        $HTTPD_SSL_CONF \
         $RHNCONF_DIR/rhn.conf \
         $SQUID_DIR/squid.conf \
         $HTTPDCONFD_DIR/cobbler-proxy.conf \
@@ -559,7 +591,7 @@ if [ "$POPULATE_CONFIG_CHANNEL" = "1" ]; then
 fi
 
 echo "Enabling Spacewalk Proxy."
-for service in squid httpd jabberd; do
+for service in squid $HTTPD_SERVICE jabberd; do
     if [ -x /usr/bin/systemctl ] ; then
         /usr/bin/systemctl enable $service
     else

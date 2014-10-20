@@ -17,8 +17,10 @@ Requires: rhncfg-client
 Requires: rhncfg
 Requires: rhncfg-management
 Requires: rhncfg-actions
+%if 0%{?fedora} || 0%{?rhel}
 Requires: glibc-common
 Requires: chkconfig
+%endif
 Requires: libxslt
 Requires: spacewalk-certs-tools >= 1.6.4
 %if 0%{?pylint_check}
@@ -52,6 +54,12 @@ Run configure-proxy.sh after installation to configure proxy.
 /usr/bin/gzip rhn-proxy-activate.8
 /usr/bin/docbook2man configure-proxy.sh.sgml
 /usr/bin/gzip configure-proxy.sh.8
+
+%if 0%{?suse_version}
+# squid3 seems to have syntax changed a bit
+sed -i 's/range_offset_limit -1 KB.*/range_offset_limit none/' squid.conf
+sed -i 's|var/spool/squid|var/cache/squid|' squid.conf
+%endif
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -96,6 +104,12 @@ spacewalk-pylint $RPM_BUILD_ROOT/usr/share/rhn
 %{_usr}/share/rhn/get_system_id.xslt
 %{_bindir}/rhn-proxy-activate
 %doc LICENSE answers.txt
+%if 0%{?suse_version}
+%dir %{_usr}/share/doc/proxy
+%dir %{_usr}/share/rhn
+%dir %{_usr}/share/rhn/installer
+%dir %{_usr}/share/rhn/installer/jabberd
+%endif
 
 %changelog
 * Tue Jul 14 2015 Tomas Kasparek <tkasparek@redhat.com> 2.4.5-1
