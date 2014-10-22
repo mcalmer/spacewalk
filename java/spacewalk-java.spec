@@ -8,13 +8,26 @@
 %if  0%{?rhel} && 0%{?rhel} < 6
 %define appdir          %{_localstatedir}/lib/tomcat5/webapps
 %define jardir          %{_localstatedir}/lib/tomcat5/webapps/rhn/WEB-INF/lib
+%define perl            /usr/bin/perl
+%define xmllint         /usr/bin/xmllint
 %else
 %if 0%{?fedora} || 0%{?rhel} >= 7
 %define appdir          %{_localstatedir}/lib/tomcat/webapps
 %define jardir          %{_localstatedir}/lib/tomcat/webapps/rhn/WEB-INF/lib
+%define perl            /usr/bin/perl
+%define xmllint         /usr/bin/xmllint
+%else
+%if 0%{?suse_version}
+%define appdir          /srv/tomcat/webapps
+%define jardir          /srv/tomcat/webapps/rhn/WEB-INF/lib
+%define perl            perl-base
+%define xmllint         libxml2-tools
 %else
 %define appdir          %{_localstatedir}/lib/tomcat6/webapps
 %define jardir          %{_localstatedir}/lib/tomcat6/webapps/rhn/WEB-INF/lib
+%define perl            /usr/bin/perl
+%define xmllint         /usr/bin/xmllint
+%endif
 %endif
 %endif
 
@@ -44,8 +57,14 @@ Requires: dwr >= 3
 Requires: jakarta-commons-el
 Requires: jakarta-commons-fileupload
 Requires: jakarta-taglibs-standard
+%if 0%{?suse_version}
+Requires: java >= 1.6.0
+# only needed for development
+#Requires: java-devel >= 1.6.0
+%else
 Requires: java >= 1:1.6.0
 Requires: java-devel >= 1:1.6.0
+%endif
 Requires: jcommon
 Requires: jdom
 Requires: jpam
@@ -64,8 +83,12 @@ Requires: stringtree-json
 Requires: susestudio-java-client
 Requires: xalan-j2 >= 0:2.6.0
 Requires: xerces-j2
+%if 0%{?fedora} || 0%{?suse_version}
 %if 0%{?fedora}
 Requires: classpathx-jaf
+%else
+Requires: gnu-jaf
+%endif
 Requires: hibernate3 >= 3.6.10
 Requires: hibernate3-c3p0 >= 3.6.10
 Requires: hibernate3-ehcache >= 3.6.10
@@ -89,7 +112,7 @@ BuildRequires: jasper5
 BuildRequires: jsp
 BuildRequires: struts >= 0:1.2.9
 %else
-%if 0%{?fedora} || 0%{?rhel} >= 7
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?suse_version}
 Requires: struts >= 0:1.3.0
 Requires: tomcat >= 7
 Requires: tomcat-lib >= 7
@@ -109,7 +132,7 @@ BuildRequires: tomcat6
 BuildRequires: tomcat6-lib
 %endif
 %endif
-%if 0%{?fedora} || 0%{?rhel} >=7
+%if 0%{?fedora} || 0%{?rhel} >=7 || 0%{?suse_version}
 Requires:      apache-commons-cli
 Requires:      apache-commons-codec
 Requires:      apache-commons-discovery
@@ -127,7 +150,26 @@ BuildRequires: apache-commons-validator
 # spelling checker is only for Fedoras (no aspell in RHEL6)
 BuildRequires: aspell aspell-en libxslt
 BuildRequires: javapackages-tools
+%if 0%{?suse_version}
+BuildRequires: ant-contrib
+BuildRequires: jakarta-oro
+BuildRequires: jboss-logging
+BuildRequires: hibernate-jpa-2.0-api
+BuildRequires: hibernate-commons-annotations
+BuildRequires: xalan-j2
+BuildRequires: geronimo-jta-1_1-api
+BuildRequires: xml-commons-jaxp-1.4-apis
+Requires:      jakarta-oro
+Requires:      jboss-logging
+Requires:      hibernate-jpa-2.0-api
+Requires:      hibernate-commons-annotations
+Requires:      xalan-j2
+Requires:      geronimo-jta-1_1-api
+# ???
+Requires:      xml-commons-jaxp-1.4-apis
+%else
 BuildRequires: mvn(ant-contrib:ant-contrib)
+%endif
 %else
 Requires:      jakarta-commons-cli
 Requires:      jakarta-commons-codec
@@ -155,8 +197,8 @@ Requires: cglib < 0:2.2
 Requires: cglib
 %endif
 
-BuildRequires: /usr/bin/perl
-BuildRequires: /usr/bin/xmllint
+BuildRequires: %{perl}
+BuildRequires: %{xmllint}
 BuildRequires: ant
 BuildRequires: ant-apache-regexp
 BuildRequires: ant-junit
@@ -172,7 +214,11 @@ BuildRequires: jaf
 BuildRequires: jakarta-commons-el
 BuildRequires: jakarta-commons-fileupload
 BuildRequires: jakarta-taglibs-standard
+%if 0%{?suse_version}
+BuildRequires: java-devel >= 1.6.0
+%else
 BuildRequires: java-devel >= 1:1.6.0
+%endif
 BuildRequires: jcommon
 BuildRequires: jdom
 BuildRequires: jpam
@@ -210,6 +256,9 @@ Obsoletes: rhn-java-config < 5.3.0
 Obsoletes: rhn-java-config-sat < 5.3.0
 Provides: rhn-java-config = %{version}-%{release}
 Provides: rhn-java-config-sat = %{version}-%{release}
+%if 0%{?suse_version}
+Requires(pre): tomcat
+%endif
 
 %description config
 This package contains the configuration files for the Spacewalk Java web
@@ -235,7 +284,7 @@ Requires: ojdbc14
 %if  0%{?rhel} && 0%{?rhel} < 6
 Requires: tomcat5
 %else
-%if 0%{?fedora} || 0%{?rhel} >= 7
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?suse_version}
 Requires: tomcat >= 7
 %else
 Requires: tomcat6
@@ -253,7 +302,7 @@ Requires: postgresql-jdbc
 %if  0%{?rhel} && 0%{?rhel} < 6
 Requires: tomcat5
 %else
-%if 0%{?fedora} || 0%{?rhel} >=7
+%if 0%{?fedora} || 0%{?rhel} >=7 || 0%{?suse_version}
 Requires: tomcat >= 7
 %else
 Requires: tomcat6
@@ -284,6 +333,10 @@ This package contains testing files of spacewalk-java.
 %{_datadir}/rhn/unittest.xml
 %{jardir}/mockobjects*.jar
 %{jardir}/strutstest*.jar
+%if 0%{?suse_version}
+%dir %{_datadir}/rhn/unit-tests
+%endif
+
 %endif
 
 %package -n spacewalk-taskomatic
@@ -317,7 +370,7 @@ Requires: spacewalk-java-lib
 Requires: tanukiwrapper
 Requires: xalan-j2 >= 0:2.6.0
 Requires: xerces-j2
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 Requires: hibernate3 >= 3.6.10
 Requires: hibernate3-c3p0 >= 3.6.10
 Requires: hibernate3-ehcache >= 3.6.10
@@ -325,10 +378,14 @@ Requires: javassist
 %else
 Requires: hibernate3 >= 0:3.2.4
 %endif
-%if 0%{?fedora} || 0%{?rhel} >= 7
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?suse_version}
+%if 0%{?suse_version}
+Requires: jakarta-commons-dbcp
+%else
+Requires: apache-commons-dbcp
+%endif
 Requires: apache-commons-cli
 Requires: apache-commons-codec
-Requires: apache-commons-dbcp
 Requires: apache-commons-lang
 Requires: apache-commons-logging
 %else
@@ -343,10 +400,15 @@ Obsoletes: taskomatic < 5.3.0
 Obsoletes: taskomatic-sat < 5.3.0
 Provides: taskomatic = %{version}-%{release}
 Provides: taskomatic-sat = %{version}-%{release}
+%if 0%{?suse_version}
+BuildRequires: systemd
+%{?systemd_requires}
+%else
 Requires(post): chkconfig
 Requires(preun): chkconfig
 # This is for /sbin/service
 Requires(preun): initscripts
+%endif
 
 %description -n spacewalk-taskomatic
 This package contains the Java version of taskomatic.
@@ -441,7 +503,7 @@ find . -type f -name '*.xml' | xargs perl -CSAD -lne '
 rm -rf $RPM_BUILD_ROOT
 
 # on Fedora 19 some jars are named differently
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 mkdir -p $RPM_BUILD_ROOT%{_javadir}
 [[ -f %{_javadir}/mchange-commons-java.jar ]] && ln -s -f %{_javadir}/mchange-commons-java.jar $RPM_BUILD_ROOT%{_javadir}/mchange-commons.jar
 [[ -f %{_javadir}/mchange-commons/mchange-commons-java.jar ]] && ln -s -f %{_javadir}/mchange-commons/mchange-commons-java.jar $RPM_BUILD_ROOT%{_javadir}/mchange-commons.jar
@@ -465,16 +527,22 @@ ant -Dprefix=$RPM_BUILD_ROOT install-tomcat7
 install -d -m 755 $RPM_BUILD_ROOT%{_sysconfdir}/tomcat/Catalina/localhost/
 install -m 755 conf/rhn.xml $RPM_BUILD_ROOT%{_sysconfdir}/tomcat/Catalina/localhost/rhn.xml
 %else
+%if 0%{?suse_version}
+ant -Dprefix=$RPM_BUILD_ROOT install-tomcat7-SUSE
+install -d -m 755 $RPM_BUILD_ROOT%{_sysconfdir}/tomcat/Catalina/localhost/
+install -m 755 conf/rhn.xml.SUSE $RPM_BUILD_ROOT%{_sysconfdir}/tomcat/Catalina/localhost/rhn.xml
+%else
 ant -Dprefix=$RPM_BUILD_ROOT install-tomcat6
 install -d -m 755 $RPM_BUILD_ROOT%{_sysconfdir}/tomcat6/Catalina/localhost/
 install -m 755 conf/rhn.xml $RPM_BUILD_ROOT%{_sysconfdir}/tomcat6/Catalina/localhost/rhn.xml
+%endif
 %endif
 %endif
 
 # check spelling errors in all resources for English if aspell installed
 [ -x "$(which aspell)" ] && scripts/spelling/check_java.sh .. en_US
 
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 install -d -m 755 $RPM_BUILD_ROOT%{_sbindir}
 install -d -m 755 $RPM_BUILD_ROOT%{_unitdir}
 %else
@@ -494,7 +562,7 @@ install -d -m 755 $RPM_BUILD_ROOT%{cobdirsnippets}
 install -d -m 755 $RPM_BUILD_ROOT%{_var}/spacewalk/systemlogs
 
 install -d -m 755 $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 echo "hibernate.cache.region.factory_class=net.sf.ehcache.hibernate.SingletonEhCacheRegionFactory" >> conf/default/rhn_hibernate.conf
 %endif
 %if 0%{?fedora} && 0%{?fedora} >= 21
@@ -525,7 +593,10 @@ install -m 755 conf/logrotate/rhn_web_api $RPM_BUILD_ROOT%{_sysconfdir}/logrotat
 %if 0%{?fedora} || 0%{?rhel} > 6
 sed -i 's/#LOGROTATE-3.8#//' $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/rhn_web_api
 %endif
-%if 0%{?fedora}
+%if 0%{?suse_version}
+sed -i 's/#LOGROTATE-3.8#.*/    su root www/' $RPM_BUILD_ROOT%{_sysconfdir}/logrotate.d/rhn_web_api
+%endif
+%if 0%{?fedora} || 0%{?suse_version}
 install -m 755 scripts/taskomatic $RPM_BUILD_ROOT%{_sbindir}
 install -m 755 scripts/taskomatic.service $RPM_BUILD_ROOT%{_unitdir}
 %else
@@ -555,7 +626,7 @@ touch $RPM_BUILD_ROOT%{_var}/spacewalk/systemlogs/audit-review.log
 # Fedoras have cglib version that is not compatible with asm and need objectweb-asm
 # Unfortunately both libraries must be installed for dependencies so we override
 # the asm symlink with objectweb-asm here
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 ln -s -f %{_javadir}/objectweb-asm/asm-all.jar $RPM_BUILD_ROOT%{jardir}/asm_asm.jar
 ln -s -f %{_javadir}/objectweb-asm/asm-all.jar $RPM_BUILD_ROOT%{_datadir}/rhn/lib/spacewalk-asm.jar
 %else
@@ -563,7 +634,7 @@ ln -s -f %{_javadir}/asm/asm.jar  $RPM_BUILD_ROOT%{_datadir}/rhn/lib/spacewalk-a
 %endif
 
 # 732350 - On Fedora 15, mchange's log stuff is no longer in c3p0.
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 ln -s -f %{_javadir}/mchange-commons.jar $RPM_BUILD_ROOT%{jardir}/mchange-commons.jar
 %endif
 
@@ -589,9 +660,25 @@ echo "#### SYMLINKS END ####"
 %clean
 rm -rf $RPM_BUILD_ROOT
 
+%if 0%{?fedora} || 0%{?rhel}
 %pre
 rm -f %{realcobsnippetsdir}/spacewalk
+%endif
 
+%if 0%{?suse_version}
+%pre -n spacewalk-taskomatic
+%service_add_pre taskomatic.service
+
+%post -n spacewalk-taskomatic
+%service_add_post taskomatic.service
+
+%preun -n spacewalk-taskomatic
+%service_del_preun taskomatic.service
+
+%postun -n spacewalk-taskomatic
+%service_del_postun taskomatic.service
+
+%else
 %post -n spacewalk-taskomatic
 if [ -f /etc/init.d/taskomatic ]; then
    # This adds the proper /etc/rc*.d links for the script
@@ -605,6 +692,7 @@ if [ $1 = 0 ] ; then
       /sbin/chkconfig --del taskomatic
    fi
 fi
+%endif
 
 %files
 %defattr(644,tomcat,tomcat,775)
@@ -649,7 +737,7 @@ fi
 %{jardir}/dom4j.jar
 %{jardir}/dwr.jar
 %{jardir}/hibernate3*
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 %{jardir}/ehcache-core.jar
 %{jardir}/*_hibernate-commons-annotations.jar
 %{jardir}/hibernate-jpa-2.0-api*.jar
@@ -697,6 +785,9 @@ fi
 # asm-1.5.3-7.jpp5.noarch (F14, F13, EL6)
 # asm-1.5.3-1jpp.ep1.1.el5.2.noarch (EL5)
 %{jardir}/asm_asm.jar
+%if 0%{?suse_version}
+%{jardir}/objectweb-asm_asm.jar
+%endif
 #%{jardir}/asmasm.jar
 #%{jardir}/asmasm-analysis.jar
 #%{jardir}/asmasm-attrs.jar
@@ -710,7 +801,10 @@ fi
 %{jardir}/struts.jar
 %else
 %{jardir}/struts*.jar
+%exclude %{jardir}/strutstest*.jar
+%if 0%{?fedora} || 0%{?rhel} >= 7
 %{jardir}/commons-chain.jar
+%endif
 %endif
 
 %dir %{cobprofdir}
@@ -725,7 +819,7 @@ fi
 %if  0%{?rhel} && 0%{?rhel} < 6
 %config(noreplace) %{_sysconfdir}/tomcat5/Catalina/localhost/rhn.xml
 %else
-%if 0%{?fedora} || 0%{?rhel} >= 7
+%if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?suse_version}
 %config(noreplace) %{_sysconfdir}/tomcat/Catalina/localhost/rhn.xml
 %else
 %config(noreplace) %{_sysconfdir}/tomcat6/Catalina/localhost/rhn.xml
@@ -734,10 +828,19 @@ fi
 %{realcobsnippetsdir}/spacewalk
 %dir %attr(755, tomcat, root) %{_var}/spacewalk/systemlogs
 %ghost %attr(644, tomcat, root) %{_var}/spacewalk/systemlogs/audit-review.log
+%if 0%{?suse_version}
+%dir %{_var}/lib/rhn
+%dir %{_var}/spacewalk
+%dir %{appdir}/rhn/WEB-INF
+%dir %{jardir}
+%dir %{_localstatedir}/lib/cobbler
+%dir %{realcobsnippetsdir}
+%endif
+
 
 %files -n spacewalk-taskomatic
 %defattr(644,root,root,775)
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 %attr(755, root, root) %{_sbindir}/taskomatic
 %attr(755, root, root) %{_unitdir}/taskomatic.service
 %else
@@ -754,11 +857,19 @@ fi
 %{_prefix}/share/rhn/config-defaults/rhn_org_quartz.conf
 %{_prefix}/share/rhn/config-defaults/rhn_java.conf
 %config %{_sysconfdir}/logrotate.d/rhn_web_api
+%if 0%{?suse_version}
+%attr(755,root,www) %dir %{_prefix}/share/rhn/config-defaults
+%endif
 
 %files lib
 %defattr(644,root,root,775)
 %{_datadir}/rhn/classes/log4j.properties
 %{_datadir}/rhn/lib/rhn.jar
+%if 0%{?suse_version}
+%dir %{_datadir}/rhn
+%dir %{_datadir}/rhn/lib
+%dir %{_datadir}/rhn/classes
+%endif
 
 %files oracle
 %defattr(644, tomcat, tomcat)

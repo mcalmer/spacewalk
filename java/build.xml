@@ -7,6 +7,7 @@
   <property name="ivy.14.compatible" value="true"/>
   <available file="/usr/share/java/tomcat6" type="dir" property="tomcat" value="tomcat6" />
   <available file="/usr/share/java/tomcat" type="dir" property="tomcat" value="tomcat" />
+  <available file="/srv/tomcat" type="dir" property="tomcat" value="tomcat7-SUSE" />
   <property name="tomcat" value="tomcat5" />
   <echo message="Importing buildconf/build-props-${tomcat}.xml" />
   <import file="buildconf/build-props-${tomcat}.xml" />
@@ -844,6 +845,13 @@ delete from rhnChannel where label like 'ChannelLabel%';
 
   <target name="install-tomcat7">
        <property name="webapp-dir" value="/var/lib/tomcat/webapps/" />
+       <echo message="${prefix}" />
+       <echo message="${webapp-dir}" />
+       <antcall target="install" />
+  </target>
+
+  <target name="install-tomcat7-SUSE">
+       <property name="webapp-dir" value="/srv/tomcat/webapps/" />
        <echo message="${prefix}" />
        <echo message="${webapp-dir}" />
        <antcall target="install" />
