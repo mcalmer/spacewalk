@@ -40,7 +40,7 @@ import java.net.IDN;
 public class BootstrapConfigAction extends BaseConfigAction {
 
     public static final String DEFAULT_CERT_PATH =
-        "/var/www/html/pub/RHN-ORG-TRUSTED-SSL-CERT";
+        "/pub/RHN-ORG-TRUSTED-SSL-CERT";
 
     public static final String HOSTNAME = "hostname";
     public static final String SSL_CERT = "ssl-cert";
@@ -103,7 +103,8 @@ public class BootstrapConfigAction extends BaseConfigAction {
         else {
             form.set(HOSTNAME, IDN.toUnicode(
                 Config.get().getString(ConfigDefaults.JABBER_SERVER)));
-            form.set(SSL_CERT, DEFAULT_CERT_PATH);
+            form.set(SSL_CERT, Config.get().getString("documentroot") +
+                DEFAULT_CERT_PATH);
             form.set(ENABLE_SSL, Boolean.TRUE);
             form.set(ENABLE_GPG, Boolean.TRUE);
             form.set(ALLOW_CONFIG_ACTIONS, Boolean.TRUE);

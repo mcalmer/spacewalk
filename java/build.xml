@@ -849,6 +849,13 @@ delete from rhnChannel where label like 'ChannelLabel%';
        <antcall target="install" />
   </target>
 
+  <target name="install-tomcat7-SUSE">
+       <property name="webapp-dir" value="/srv/tomcat/webapps/" />
+       <echo message="${prefix}" />
+       <echo message="${webapp-dir}" />
+       <antcall target="install" />
+  </target>
+
   <target name="apidoc-install"
           depends="apidoc-jsp"
           description="Copies apidoc to the target directory">
