@@ -29,6 +29,7 @@ Requires: python-hwdata
 %else
 %if 0%{?rhel} > 5 || 0%{?suse_version} >= 1140
 Requires: python-gudev
+Requires: python-gobject2
 Requires: python-hwdata
 %else
 Requires: hal >= 0.5.8.1-52
