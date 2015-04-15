@@ -70,7 +70,6 @@ Requires: jdom
 Requires: jpam
 Requires: jta
 Requires: log4j
-Requires: oscache
 Requires: redstone-xmlrpc
 Requires: simple-core
 Requires: simple-xml
@@ -99,8 +98,10 @@ BuildRequires: hibernate3-c3p0 >= 3.6.10
 BuildRequires: hibernate3-ehcache >= 3.6.10
 BuildRequires: javassist
 %else
+Requires: oscache
 Requires: hibernate3 = 0:3.2.4
 BuildRequires: hibernate3 = 0:3.2.4
+BuildRequires: oscache
 %endif
 # EL5 = Struts 1.2 and Tomcat 5, EL6+/recent Fedoras = 1.3 and Tomcat 6
 %if 0%{?rhel} && 0%{?rhel} < 6
@@ -223,7 +224,6 @@ BuildRequires: jcommon
 BuildRequires: jdom
 BuildRequires: jpam
 BuildRequires: jta
-BuildRequires: oscache
 BuildRequires: postgresql-jdbc
 BuildRequires: quartz
 BuildRequires: redstone-xmlrpc
@@ -361,7 +361,6 @@ Requires: java-devel >= 0:1.6.0
 Requires: jcommon
 Requires: jpam
 Requires: log4j
-Requires: oscache
 Requires: quartz < 2.0
 Requires: simple-core
 Requires: spacewalk-java-config
@@ -377,6 +376,7 @@ Requires: hibernate3-ehcache >= 3.6.10
 Requires: javassist
 %else
 Requires: hibernate3 >= 0:3.2.4
+Requires: oscache
 %endif
 %if 0%{?fedora} || 0%{?rhel} >= 7 || 0%{?suse_version}
 %if 0%{?suse_version}
@@ -570,7 +570,7 @@ echo "wrapper.java.classpath.28=/usr/share/java/log4j-1.jar" >> conf/default/rhn
 %else
 echo "wrapper.java.classpath.28=/usr/share/java/log4j.jar" >> conf/default/rhn_taskomatic_daemon.conf
 %endif
-%if 0%{?fedora}
+%if 0%{?fedora} || 0%{?suse_version}
 echo "wrapper.java.classpath.49=/usr/share/java/hibernate3/hibernate-core-3.jar
 wrapper.java.classpath.61=/usr/share/java/hibernate-jpa-2.0-api.jar
 wrapper.java.classpath.62=/usr/share/java/hibernate3/hibernate-ehcache-3.jar
@@ -579,10 +579,11 @@ wrapper.java.classpath.64=/usr/share/java/hibernate*/hibernate-commons-annotatio
 wrapper.java.classpath.65=/usr/share/java/slf4j/api.jar
 wrapper.java.classpath.66=/usr/share/java/jboss-logging.jar
 wrapper.java.classpath.67=/usr/share/java/javassist.jar
-wrapper.java.classpath.68=/usr/share/java/ehcache-core.jar" >> conf/default/rhn_taskomatic_daemon.conf
+wrapper.java.classpath.27=/usr/share/java/ehcache-core.jar" >> conf/default/rhn_taskomatic_daemon.conf
 %else
 echo "hibernate.cache.provider_class=org.hibernate.cache.OSCacheProvider" >> conf/default/rhn_hibernate.conf
 echo "wrapper.java.classpath.49=/usr/share/java/hibernate3.jar" >> conf/default/rhn_taskomatic_daemon.conf
+echo "wrapper.java.classpath.27=/usr/share/java/oscache.jar" >> conf/default/rhn_taskomatic_daemon.conf
 %endif
 install -m 644 conf/default/rhn_hibernate.conf $RPM_BUILD_ROOT%{_prefix}/share/rhn/config-defaults/rhn_hibernate.conf
 install -m 644 conf/default/rhn_taskomatic_daemon.conf $RPM_BUILD_ROOT%{_prefix}/share/rhn/config-defaults/rhn_taskomatic_daemon.conf
@@ -754,7 +755,8 @@ fi
 %{_javadir}/concurrent.jar
 %{_javadir}/hibernate-jpa-2.0-api.jar
 %endif
-
+%else
+%{jardir}/oscache.jar
 %endif
 %{jardir}/jaf.jar
 %{jardir}/javamail.jar
@@ -764,7 +766,6 @@ fi
 %{jardir}/jta.jar
 %{jardir}/log4j*.jar
 %{jardir}/oro.jar
-%{jardir}/oscache.jar
 %{jardir}/quartz.jar
 %{jardir}/redstone-xmlrpc-client.jar
 %{jardir}/redstone-xmlrpc.jar

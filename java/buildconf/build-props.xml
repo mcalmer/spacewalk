@@ -64,7 +64,7 @@
     <available file="/usr/share/java/log4j-1.jar" />
   </condition>
 
-  <property name="hibernate3.2deps" value="hibernate3"/>
+  <property name="hibernate3.2deps" value="hibernate3 oscache"/>
 
   <property name="hibernate3.6deps" value="hibernate3/hibernate-ehcache-3 hibernate3/hibernate-c3p0-3 hibernate3/hibernate-core-3 ${hibernate-commons-annotations} slf4j/api jboss-logging javassist slf4j/log4j12 ehcache-core hibernate-jpa-2.0-api"/>
 
@@ -115,7 +115,7 @@
 
   <property name="run.jar.dependencies"
       value="antlr ${asm} cglib c3p0 commons-discovery dom4j jaf jta
-             ojdbc14 oscache sitemesh taglibs-standard xalan-j2 xerces-j2
+             ojdbc14 sitemesh taglibs-standard xalan-j2 xerces-j2
              xml-commons-apis ${common.jar.dependencies}" />
 
   <!-- =================== RPM build, use jpackage syntax ======================= -->
@@ -130,7 +130,7 @@
 
   <property name="install.run.jar.dependencies"
       value="antlr ${asm} cglib c3p0 commons-discovery dom4j dwr jaf jta
-             oscache sitemesh taglibs-standard xalan-j2 xerces-j2
+             sitemesh taglibs-standard xalan-j2 xerces-j2
              xml-commons-apis ${install.common.jar.dependencies}" />
 
   <property name="install.common.jar.dependencies"
@@ -151,7 +151,7 @@
              ${commons-validator} concurrent dom4j ${hibernate} jta
              jaf ${jasper-jars} javamail jcommon jdom ${other-jars}
              ${tomcat-jars} jpam ${log4j-jars} redstone-xmlrpc-client redstone-xmlrpc
-             oro oscache quartz stringtree-json sitemesh ${struts-jars} taglibs-core
+             oro quartz stringtree-json sitemesh ${struts-jars} taglibs-core
              taglibs-standard tanukiwrapper postgresql-jdbc simple-xml susestudio-java-client
              xalan-j2 xerces-j2 xml-commons-apis simple-core" />
 
