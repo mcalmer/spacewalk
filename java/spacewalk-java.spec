@@ -55,8 +55,7 @@ ExcludeArch: ia64
 Requires: bcel
 Requires: c3p0 >= 0.9.1
 Requires: classpathx-mail
-Requires: cobbler20
-Requires: dojo
+Requires: cobbler >= 2.0.0
 Requires: dwr >= 3
 Requires: jakarta-commons-el
 Requires: jakarta-commons-fileupload
