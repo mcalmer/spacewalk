@@ -1847,7 +1847,7 @@ sub isSUSE {
     my %opts = ();
     return 0 if (! -e OS_RELEASE);
 
-    read_config(OS_RELEASE, \%opts)
+    read_config(OS_RELEASE, \%opts);
     return 1 if ($opts{CPE_NAME} && $opts{CPE_NAME} =~ /^cpe:\/o:(open)*suse:/);
     return 0;
 }
