@@ -10,23 +10,27 @@
 %define jardir          %{_localstatedir}/lib/tomcat5/webapps/rhn/WEB-INF/lib
 %define perl            /usr/bin/perl
 %define xmllint         /usr/bin/xmllint
+%define with_oracle 1
 %else
 %if 0%{?fedora} || 0%{?rhel} >= 7
 %define appdir          %{_localstatedir}/lib/tomcat/webapps
 %define jardir          %{_localstatedir}/lib/tomcat/webapps/rhn/WEB-INF/lib
 %define perl            /usr/bin/perl
 %define xmllint         /usr/bin/xmllint
+%define with_oracle 1
 %else
 %if 0%{?suse_version}
 %define appdir          /srv/tomcat/webapps
 %define jardir          /srv/tomcat/webapps/rhn/WEB-INF/lib
 %define perl            perl-base
 %define xmllint         libxml2-tools
+%define with_oracle 0
 %else
 %define appdir          %{_localstatedir}/lib/tomcat6/webapps
 %define jardir          %{_localstatedir}/lib/tomcat6/webapps/rhn/WEB-INF/lib
 %define perl            /usr/bin/perl
 %define xmllint         /usr/bin/xmllint
+%define with_oracle 1
 %endif
 %endif
 %endif
@@ -277,6 +281,7 @@ Requires: /usr/bin/sudo
 This package contains the jar files for the Spacewalk Java web application
 and taskomatic process.
 
+%if 0%{?with_oracle}
 %package oracle
 Summary: Oracle database backend support files for Spacewalk Java
 Group: Applications/Internet
@@ -294,6 +299,7 @@ Provides: spacewalk-java-jdbc = %{version}-%{release}
 
 %description oracle
 This package contains Oracle database backend files for the Spacewalk Java.
+%endif
 
 %package postgresql
 Summary: PostgreSQL database backend support files for Spacewalk Java
@@ -618,7 +624,9 @@ install -m 644 conf/cobbler/snippets/post_delete_system  $RPM_BUILD_ROOT%{cobdir
 install -m 644 conf/cobbler/snippets/redhat_register  $RPM_BUILD_ROOT%{cobdirsnippets}/redhat_register
 
 ln -s -f /usr/sbin/tanukiwrapper $RPM_BUILD_ROOT%{_bindir}/taskomaticd
+%if 0%{?with_oracle}
 ln -s -f %{_javadir}/ojdbc14.jar $RPM_BUILD_ROOT%{jardir}/ojdbc14.jar
+%endif
 ln -s -f %{_javadir}/dwr.jar $RPM_BUILD_ROOT%{jardir}/dwr.jar
 install -d -m 755 $RPM_BUILD_ROOT%{realcobsnippetsdir}
 ln -s -f  %{cobdirsnippets} $RPM_BUILD_ROOT%{realcobsnippetsdir}/spacewalk
@@ -872,9 +880,11 @@ fi
 %dir %{_datadir}/rhn/classes
 %endif
 
+%if 0%{?with_oracle}
 %files oracle
 %defattr(644, tomcat, tomcat)
 %{jardir}/ojdbc14.jar
+%endif
 
 %files postgresql
 %defattr(644, tomcat, tomcat)
