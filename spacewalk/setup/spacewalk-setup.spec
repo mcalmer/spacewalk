@@ -32,6 +32,9 @@ BuildRequires:  perl(ExtUtils::MakeMaker)
 BuildArch:      noarch
 Requires:       perl
 Requires:       perl-Params-Validate
+Requires:       perl(Mail::RFC822::Address)
+Requires:       perl(DateTime)
+Requires:       perl(Net::LibIDN)
 Requires:       spacewalk-schema
 Requires:       %{restorecon}
 Requires:       spacewalk-admin
