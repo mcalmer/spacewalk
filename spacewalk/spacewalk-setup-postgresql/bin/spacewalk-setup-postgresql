@@ -41,6 +41,17 @@ ask_check() {
     done
 }
 
+isSUSE() {
+    if [ ! -e '/etc/os-release' ]; then
+        return 1
+    fi
+    source /etc/os-release
+    if echo $CPE_NAME | grep -E 'cpe:/o:(open)*suse:' >/dev/null ; then
+        return 0
+    fi
+    return 1
+}
+
 def_regexes() {
     local digit seqence n
     local IPv4_addr IPv4_mask IPv6_addr IPv6_mask
@@ -288,17 +299,6 @@ check() {
         fi
     fi
     exit $RET
-}
-
-isSUSE() {
-    if [ ! -e '/etc/os-release' ]; then
-        return 1
-    fi
-    source /etc/os-release
-    if echo $CPE_NAME | grep -E 'cpe:/o:(open)*suse:' >/dev/null ; then
-        return 0
-    fi
-    return 1
 }
 
 exists_db() {
