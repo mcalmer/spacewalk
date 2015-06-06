@@ -225,7 +225,6 @@ fi
 %dir %attr(755, root, root) %{_var}/lib/rhn/search
 %dir %attr(755, root, root) %{_var}/lib/rhn/search/indexes
 %{_var}/lib/rhn/search/indexes/docs
-%doc licenses/*
 %if 0%{?suse_version}
 %dir /usr/share/rhn
 %dir /usr/share/rhn/search
