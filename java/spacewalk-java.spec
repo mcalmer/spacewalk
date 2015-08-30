@@ -11,6 +11,7 @@
 %define perl            /usr/bin/perl
 %define xmllint         /usr/bin/xmllint
 %define with_oracle 1
+%define cobbler         cobbler20
 %else
 %if 0%{?fedora} || 0%{?rhel} >= 7
 %define appdir          %{_localstatedir}/lib/tomcat/webapps
@@ -18,6 +19,7 @@
 %define perl            /usr/bin/perl
 %define xmllint         /usr/bin/xmllint
 %define with_oracle 1
+%define cobbler         cobbler20
 %else
 %if 0%{?suse_version}
 %define appdir          /srv/tomcat/webapps
@@ -25,12 +27,14 @@
 %define perl            perl-base
 %define xmllint         libxml2-tools
 %define with_oracle 0
+%define cobbler         cobbler >= 2
 %else
 %define appdir          %{_localstatedir}/lib/tomcat6/webapps
 %define jardir          %{_localstatedir}/lib/tomcat6/webapps/rhn/WEB-INF/lib
 %define perl            /usr/bin/perl
 %define xmllint         /usr/bin/xmllint
 %define with_oracle 1
+%define cobbler         cobbler20
 %endif
 %endif
 %endif
@@ -56,8 +60,7 @@ ExcludeArch: ia64
 Requires: bcel
 Requires: c3p0 >= 0.9.1
 Requires: classpathx-mail
-Requires: cobbler20
-Requires: dojo
+Requires: %{cobbler}
 Requires: dwr >= 3
 Requires: jakarta-commons-el
 Requires: jakarta-commons-fileupload
